@@ -1,0 +1,33 @@
+{
+  "name": "traccar-graphql",
+  "version": "0.0.0",
+  "description": "GraphQL server for traccar",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run prod",
+    "server": "node ./src/index.js",
+    "server:prod": "node ./dist/index.js",
+    "dev": "NODE_ENV=development npm run server",
+    "clean": "rimraf dist",
+    "build": "rollup -c",
+    "prod": "NODE_ENV=production npm run clean && npm run build && npm run server:prod",
+    "watch": "nodemon",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sun Howwrongbum <sun@libermatic.com>",
+  "license": "MIT",
+  "dependencies": {
+    "apollo-datasource-rest": "^0.3.2",
+    "apollo-server": "^2.4.8",
+    "dotenv": "^8.0.0",
+    "esm": "^3.2.22",
+    "graphql": "^14.2.1",
+    "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.11"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.0",
+    "rimraf": "^2.6.3",
+    "rollup": "^1.11.3"
+  }
+}

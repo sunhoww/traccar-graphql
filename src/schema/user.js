@@ -1,8 +1,8 @@
-import { AuthenticationError } from 'apollo-server';
+import { gql } from 'apollo-server';
 
 import { createToken, getSid } from '../auth';
 
-export const typeDef = `
+export const typeDef = gql`
   extend type Query {
     me: User
   }

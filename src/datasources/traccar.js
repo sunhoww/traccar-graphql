@@ -1,11 +1,18 @@
 import { AuthenticationError } from 'apollo-server';
 import { RESTDataSource } from 'apollo-datasource-rest';
-import { pick } from 'lodash';
+import { pick, head } from 'lodash';
 
 import { createCookie } from '../auth';
 
 function userReducer(user) {
   return pick(user, ['id', 'email', 'name']);
+}
+
+function deviceReducer(device) {
+  return Object.assign(
+    { status: device.status.toUpperCase() },
+    pick(device, ['id', 'uniqueId', 'name'])
+  );
 }
 
 class TraccarAPI extends RESTDataSource {
@@ -21,7 +28,7 @@ class TraccarAPI extends RESTDataSource {
       return { body, headers };
     } catch (e) {
       if (e.name === 'FetchError' && e.type === 'invalid-json') {
-        throw new AuthenticationError('Invalid credentials');
+        return { body: null, headers };
       }
       throw e;
     }
@@ -36,6 +43,9 @@ class TraccarAPI extends RESTDataSource {
 
   async getSession() {
     const { body } = await this.get('session');
+    if (!body) {
+      throw new AuthenticationError('Invalid credentials');
+    }
     return userReducer(body);
   }
 
@@ -47,12 +57,36 @@ class TraccarAPI extends RESTDataSource {
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
       }
     );
+    if (!body) {
+      throw new AuthenticationError('Invalid credentials');
+    }
     return Object.assign({ cookie: headers.get('set-cookie') }, userReducer(body));
   }
 
   async deleteSession() {
     await this.delete('session');
     return null;
+  }
+
+  async getDevices() {
+    const { body } = await this.get('devices');
+    return body.map(deviceReducer);
+  }
+
+  async getDeviceById(id) {
+    if (!id) {
+      return null;
+    }
+    const { body } = await this.get('devices', { id });
+    return deviceReducer(head(body));
+  }
+
+  async getDevicesByUserId(userId) {
+    if (!userId) {
+      return [];
+    }
+    const { body } = await this.get('devices', { userId });
+    return body.map(deviceReducer);
   }
 }
 

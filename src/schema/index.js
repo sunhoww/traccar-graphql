@@ -1,4 +1,7 @@
+import { merge } from 'lodash';
+
 import { typeDef as User, resolvers as userResolvers } from './user';
+import { typeDef as Device, resolvers as deviceResolvers } from './device';
 
 const Query = `
   type Query {
@@ -12,6 +15,6 @@ const Mutation = `
   }
 `;
 
-export const typeDefs = [Query, Mutation, User];
+export const typeDefs = [Query, Mutation, User, Device];
 
-export const resolvers = Object.assign(userResolvers);
+export const resolvers = merge(userResolvers, deviceResolvers);

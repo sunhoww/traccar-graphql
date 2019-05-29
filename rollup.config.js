@@ -1,4 +1,5 @@
 import run from 'rollup-plugin-run';
+import flow from 'rollup-plugin-flow';
 import pkg from './package.json';
 
 const dev = process.env.ROLLUP_WATCH === 'true';
@@ -11,6 +12,7 @@ export default {
       run({
         execArgv: ['-r', 'dotenv/config'],
       }),
+    flow(),
   ],
   external: Object.keys(pkg.dependencies),
 };

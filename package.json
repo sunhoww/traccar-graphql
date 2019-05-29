@@ -7,11 +7,11 @@
     "start": "npm run prod",
     "serve:dev": "NODE_ENV=development node ./dist/index.js",
     "serve:prod": "NODE_ENV=production node ./dist/index.js",
-    "dev": "npm run server:dev",
+    "dev": "npm run serve:dev",
     "clean": "rimraf dist",
     "build": "rollup -c",
-    "prod": "NODE_ENV=production npm run clean && npm run build && npm run server:prod",
-    "watch": "rollup -c --watch",
+    "prod": "npm run clean && NODE_ENV=production npm run build && npm run serve:prod",
+    "watch": "NODE_ENV=development rollup -c --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Sun Howwrongbum <sun@libermatic.com>",
@@ -25,8 +25,10 @@
     "lodash": "^4.17.11"
   },
   "devDependencies": {
+    "flow-bin": "^0.98.1",
     "rimraf": "^2.6.3",
-    "rollup": "^1.11.3",
+    "rollup": "^1.12.4",
+    "rollup-plugin-flow": "^1.1.1",
     "rollup-plugin-run": "^1.1.0"
   }
 }

@@ -1,12 +1,19 @@
-import { AuthenticationError } from 'apollo-server';
+// @flow
+
+import { AuthenticationError, ApolloError } from 'apollo-server';
 import { RESTDataSource } from 'apollo-datasource-rest';
-import { pick, head } from 'lodash';
+import { pick, head, kebabCase } from 'lodash';
 
-import { createCookie } from '../auth';
+class TraccarError extends ApolloError {}
 
-function userReducer(user) {
-  return pick(user, ['id', 'email', 'name']);
-}
+type SessionArgs = {
+  email: string,
+  password: string,
+};
+
+type UserArgs = SessionArgs & {
+  name: string,
+};
 
 function deviceReducer(device) {
   return Object.assign(
@@ -18,54 +25,54 @@ function deviceReducer(device) {
 class TraccarAPI extends RESTDataSource {
   constructor() {
     super();
-    this.baseURL = process.env.TRACCAR_BACKEND + '/api';
+    this.baseURL = `${process.env.TRACCAR_BACKEND || ''}/api`;
   }
 
   async didReceiveResponse(response, request) {
-    const { headers } = response;
-    try {
-      const body = await super.didReceiveResponse(response, request);
-      return { body, headers };
-    } catch (e) {
-      if (e.name === 'FetchError' && e.type === 'invalid-json') {
-        return { body: null, headers };
-      }
-      throw e;
+    if (!response.ok) {
+      const { url, status, statusText } = response;
+      const code = `${status}/${kebabCase(statusText)}`;
+      const msg = await response.text();
+      throw new TraccarError(msg, code, {
+        code,
+        url: url.replace(new RegExp(this.baseURL, 'g'), ''),
+        status,
+        statusText,
+      });
     }
+
+    const { headers } = response;
+    const { method, pathname } = request;
+    const body = await super.didReceiveResponse(response, request);
+    if (method === 'POST' && pathname === '/api/session') {
+      return Object.assign(body, { traccarSessionId: headers.get('set-cookie') });
+    }
+    return body;
   }
 
   willSendRequest(request) {
-    const { sid } = this.context.claims;
-    if (sid) {
-      request.headers.set('Cookie', createCookie(sid));
+    const { traccarSid } = this.context;
+    if (traccarSid) {
+      request.headers.set('Cookie', traccarSid);
     }
   }
 
-  async getSession() {
-    const { body } = await this.get('session');
-    if (!body) {
-      throw new AuthenticationError('Invalid credentials');
-    }
-    return userReducer(body);
+  getSession(): Promise<Object> {
+    return this.get('session');
   }
 
-  async createSession({ email, password }) {
-    const { body, headers } = await this.post(
-      'session',
-      `email=${email}&password=${password}`,
-      {
-        headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      }
-    );
-    if (!body) {
-      throw new AuthenticationError('Invalid credentials');
-    }
-    return Object.assign({ cookie: headers.get('set-cookie') }, userReducer(body));
+  createSession({ email, password }: SessionArgs): Promise<Object> {
+    return this.post('session', `email=${email}&password=${password}`, {
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    });
   }
 
-  async deleteSession() {
-    await this.delete('session');
-    return null;
+  createUser({ email, name, password }: UserArgs): Promise<Object> {
+    return this.post('users', { email, name, password });
+  }
+
+  deleteSession(): Promise<null> {
+    return this.delete('session');
   }
 
   async getDevices() {

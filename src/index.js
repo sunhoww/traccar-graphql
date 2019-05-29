@@ -1,26 +1,33 @@
 import { ApolloServer, AuthenticationError } from 'apollo-server';
+import * as admin from 'firebase-admin';
 
 import { typeDefs, resolvers } from './schema/index';
 import TraccarAPI from './datasources/traccar';
-import { extractToken } from './auth';
+import Firestore from './datasources/firestore';
+
+admin.initializeApp({ credential: admin.credential.applicationDefault() });
+
+const store = admin.firestore();
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  dataSources: () => ({ traccar: new TraccarAPI() }),
+  dataSources: () => ({
+    traccar: new TraccarAPI(),
+    firestore: new Firestore({ store }),
+  }),
   context: async ({ req }) => {
     try {
       const re = /^Bearer\s(.*)$/.exec(req.headers.authorization);
-      const claims = await extractToken(re[1]);
-      return { claims };
+      const idToken = re[1];
+      const traccarSid = req.headers['x-traccar-session-id'];
+      const { uid } = await admin.auth().verifyIdToken(idToken);
+      return { idToken, uid, traccarSid };
     } catch (e) {
-      if (
-        ['TokenExpiredError', 'JsonWebTokenError', 'NotBeforeError'].includes(e.name)
-      ) {
-        throw new AuthenticationError(e.message);
-      }
-      if (e.name === 'TypeError') {
-        return { claims: {} };
+      if (['auth/id-token-expired'].includes(e.code)) {
+        throw new AuthenticationError(
+          'ID token has expired. Get a fresh token from your client app and try again'
+        );
       }
       throw e;
     }
@@ -31,6 +38,6 @@ const server = new ApolloServer({
       : true,
 });
 
-server.listen().then(({ url }) => {
+server.listen(4000).then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);
 });

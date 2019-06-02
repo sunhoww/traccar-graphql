@@ -1,3 +1,5 @@
+// @flow
+
 import { ApolloServer, AuthenticationError } from 'apollo-server';
 import * as admin from 'firebase-admin';
 
@@ -19,6 +21,9 @@ const server = new ApolloServer({
   context: async ({ req }) => {
     try {
       const re = /^Bearer\s(.*)$/.exec(req.headers.authorization);
+      if (!re) {
+        return {};
+      }
       const idToken = re[1];
       const traccarSid = req.headers['x-traccar-session-id'];
       const { uid } = await admin.auth().verifyIdToken(idToken);

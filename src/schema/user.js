@@ -3,6 +3,7 @@
 import { gql, AuthenticationError, UserInputError } from 'apollo-server';
 import * as admin from 'firebase-admin';
 import { pick } from 'lodash';
+import type { Context } from '../types';
 
 export const typeDef = gql`
   extend type Query {
@@ -51,7 +52,7 @@ function userGetter(dataSources: Object) {
 
 export const resolvers = {
   Query: {
-    me: async (_, __, { dataSources }) => {
+    me: async (_: void, __: void, { dataSources }: Context) => {
       try {
         const user = await dataSources.traccar.getSession();
         return userReducer(user);
@@ -63,7 +64,7 @@ export const resolvers = {
     },
   },
   Mutation: {
-    createSession: async (_, __, { dataSources, idToken }) => {
+    createSession: async (_: void, __: void, { dataSources, idToken }: Context) => {
       const getOrCreateUser = userGetter(dataSources);
       try {
         const checkRevoked = true;
@@ -85,7 +86,7 @@ export const resolvers = {
         }
       }
     },
-    deleteSession: (_, __, { dataSources }) => {
+    deleteSession: (_: void, __: void, { dataSources }: Context) => {
       return dataSources.traccar.deleteSession();
     },
   },

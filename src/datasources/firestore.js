@@ -1,30 +1,33 @@
 // @flow
 
 import { DataSource } from 'apollo-datasource';
+import type { DataSourceConfig } from 'apollo-datasource';
 
 type UserProps = {
   traccarId: string,
   traccarCred: string,
 };
 
-class Firestore extends DataSource {
+type Context = {};
+
+class Firestore extends DataSource<Context> {
   constructor({ store }: Object) {
     super();
     this.store = store;
   }
 
-  initialize(config: Object) {
+  initialize(config: DataSourceConfig<Context>) {
     this.context = config.context;
   }
 
-  async getUser(uid: string) {
+  async getUser(uid: string): Promise<Object> {
     const doc = await this.store
       .collection('users')
       .doc(uid)
       .get();
     return doc.data();
   }
-  updateUser(uid: string, data: UserProps) {
+  updateUser(uid: string, data: UserProps): Promise<Object> {
     return this.store
       .collection('users')
       .doc(uid)

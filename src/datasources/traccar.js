@@ -2,7 +2,10 @@
 
 import { AuthenticationError, ApolloError } from 'apollo-server';
 import { RESTDataSource } from 'apollo-datasource-rest';
+import type { Request, Response } from 'apollo-server-env';
 import { pick, head, kebabCase } from 'lodash';
+
+import type { Context } from '../types';
 
 class TraccarError extends ApolloError {}
 
@@ -22,13 +25,13 @@ function deviceReducer(device) {
   );
 }
 
-class TraccarAPI extends RESTDataSource {
+class TraccarAPI extends RESTDataSource<Context> {
   constructor() {
     super();
     this.baseURL = `${process.env.TRACCAR_BACKEND || ''}/api`;
   }
 
-  async didReceiveResponse(response, request) {
+  async didReceiveResponse(response: Response, request: Request) {
     if (!response.ok) {
       const { url, status, statusText } = response;
       const code = `${status}/${kebabCase(statusText)}`;
@@ -50,7 +53,7 @@ class TraccarAPI extends RESTDataSource {
     return body;
   }
 
-  willSendRequest(request) {
+  willSendRequest(request: Request) {
     const { traccarSid } = this.context;
     if (traccarSid) {
       request.headers.set('Cookie', traccarSid);
@@ -80,7 +83,7 @@ class TraccarAPI extends RESTDataSource {
     return body.map(deviceReducer);
   }
 
-  async getDeviceById(id) {
+  async getDeviceById(id: String) {
     if (!id) {
       return null;
     }
@@ -88,7 +91,7 @@ class TraccarAPI extends RESTDataSource {
     return deviceReducer(head(body));
   }
 
-  async getDevicesByUserId(userId) {
+  async getDevicesByUserId(userId: String) {
     if (!userId) {
       return [];
     }

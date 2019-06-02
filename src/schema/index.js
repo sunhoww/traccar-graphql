@@ -1,3 +1,5 @@
+// @flow
+
 import { merge } from 'lodash';
 
 import { typeDef as User, resolvers as userResolvers } from './user';

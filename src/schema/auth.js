@@ -73,7 +73,7 @@ export const resolvers = {
           throw new AuthenticationError(e.message);
         }
         if (['400/bad-request'].includes(e.code)) {
-          throw new UserInputError('User with the same details already exists');
+          throw new UserInputError("Whoops! There's something wrong with the request");
         }
       }
     },

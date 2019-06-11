@@ -36,6 +36,7 @@ class TraccarAPI extends RESTDataSource<Context> {
       const { url, status, statusText } = response;
       const code = `${status}/${kebabCase(statusText)}`;
       const msg = await response.text();
+      console.error(`${code}: ${msg}`);
       throw new TraccarError(msg, code, {
         code,
         url: url.replace(new RegExp(this.baseURL, 'g'), ''),

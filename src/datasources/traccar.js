@@ -45,9 +45,9 @@ class TraccarAPI extends RESTDataSource<Context> {
     }
 
     const { headers } = response;
-    const { method, pathname } = request;
+    const { method, url } = request;
     const body = await super.didReceiveResponse(response, request);
-    if (method === 'POST' && pathname === '/api/session') {
+    if (method === 'POST' && url === `${this.baseURL}/session`) {
       return Object.assign(body, { traccarSessionId: headers.get('set-cookie') });
     }
     return body;

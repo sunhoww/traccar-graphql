@@ -1,7 +1,7 @@
 // @flow
 
-import { ApolloServer, AuthenticationError } from 'apollo-server';
-import * as admin from 'firebase-admin';
+import { ApolloServer, AuthenticationError, ApolloError } from 'apollo-server';
+import admin from 'firebase-admin';
 
 import { typeDefs, resolvers } from './schema/index';
 import TraccarAPI from './datasources/traccar';
@@ -29,10 +29,13 @@ const server = new ApolloServer({
       const { uid } = await admin.auth().verifyIdToken(idToken);
       return { idToken, uid, traccarSid };
     } catch (e) {
-      if (['auth/id-token-expired'].includes(e.code)) {
-        throw new AuthenticationError(
-          'ID token has expired. Get a fresh token from your client app and try again'
-        );
+      if (e.constructor.name === 'FirebaseAuthError') {
+        if (['auth/id-token-expired'].includes(e.code)) {
+          throw new AuthenticationError(
+            'ID token has expired. Get a fresh token from your client app and try again'
+          );
+        }
+        throw new ApolloError('Error with Firebase Authentication', e.code);
       }
       throw e;
     }

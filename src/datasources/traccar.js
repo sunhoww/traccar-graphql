@@ -80,7 +80,7 @@ class TraccarAPI extends RESTDataSource<Context> {
   }
 
   async getDevices() {
-    const { body } = await this.get('devices');
+    const body = await this.get('devices');
     return body.map(deviceReducer);
   }
 
@@ -88,7 +88,7 @@ class TraccarAPI extends RESTDataSource<Context> {
     if (!id) {
       return null;
     }
-    const { body } = await this.get('devices', { id });
+    const body = await this.get('devices', { id });
     return deviceReducer(head(body));
   }
 
@@ -96,7 +96,7 @@ class TraccarAPI extends RESTDataSource<Context> {
     if (!userId) {
       return [];
     }
-    const { body } = await this.get('devices', { userId });
+    const body = await this.get('devices', { userId });
     return body.map(deviceReducer);
   }
 }

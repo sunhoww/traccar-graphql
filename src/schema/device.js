@@ -11,9 +11,9 @@ export const typeDef = gql`
   }
 
   type Device {
-    id: Int!
-    uniqueId: String
+    id: ID!
     name: String
+    uniqueId: String
     status: DeviceStatus
   }
 

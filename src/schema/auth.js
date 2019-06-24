@@ -43,10 +43,11 @@ function userGetter(dataSources: Object) {
 
 export const resolvers = {
   Query: {
-    me: async (_: void, __: void, { dataSources }: Context) => {
+    me: async (_: void, __: void, { dataSources, idToken }: Context) => {
       try {
+        const { uid } = await admin.auth().verifyIdToken(idToken);
         const user = await dataSources.traccar.getSession();
-        return userReducer(user);
+        return userReducer({ ...user, uid });
       } catch (e) {
         if (['404/not-found'].includes(e.code)) {
           throw new AuthenticationError('Service unavailable for this user');
@@ -67,7 +68,7 @@ export const resolvers = {
           email,
           password: traccarCred,
         });
-        return { traccarSessionId, me: userReducer(user) };
+        return { traccarSessionId, me: userReducer({ ...user, uid }) };
       } catch (e) {
         if (['auth/id-token-revoked'].includes(e.code)) {
           throw new AuthenticationError(e.message);
@@ -78,7 +79,7 @@ export const resolvers = {
       }
     },
     deleteSession: async (_: void, __: void, { dataSources }: Context) => {
-      const a = await dataSources.traccar.deleteSession();
+      await dataSources.traccar.deleteSession();
       return null;
     },
   },

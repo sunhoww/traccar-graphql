@@ -7,14 +7,15 @@ import type { Context } from '../types';
 
 export const typeDef = gql`
   type User {
-    id: Int!
+    id: ID!
+    uid: String!
     email: String
     name: String
   }
 `;
 
 export function userReducer(user: Object) {
-  return pick(user, ['id', 'email', 'name']);
+  return pick(user, ['id', 'uid', 'email', 'name']);
 }
 
 export const resolvers = {};
